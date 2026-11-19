@@ -1,17 +1,18 @@
 import React from "react";
-import { IconDrill, IconShield, IconArrowLeft } from "./Icons";
+import { IconArrowLeft } from "./Icons";
+import Mascot from "./Mascot";
 
 export default function Navbar({
   currentView = "home",
   onNavigateHome,
   activeChallengeTitle = null,
-  sandboxStatus = "healthy"
 }) {
   return (
     <header
       style={{
-        height: "60px",
-        background: "var(--bg-surface)",
+        height: "56px",
+        background: "rgba(7, 9, 18, 0.85)",
+        backdropFilter: "blur(12px)",
         borderBottom: "1px solid var(--border-subtle)",
         display: "flex",
         alignItems: "center",
@@ -19,11 +20,11 @@ export default function Navbar({
         padding: "0 24px",
         position: "sticky",
         top: 0,
-        zIndex: 40,
+        zIndex: 50,
       }}
     >
-      {/* Left: Brand Identity */}
-      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+      {/* Brand Identity */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
         <button
           onClick={onNavigateHome}
           style={{
@@ -33,46 +34,20 @@ export default function Navbar({
             textDecoration: "none",
             color: "var(--text-main)",
           }}
-          title="Return to Drill Catalog"
+          title="RepoDrill Home"
         >
-          <div
+          <Mascot size="sm" interactive={false} />
+          <span
             style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "8px",
-              background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 0 14px rgba(37, 99, 235, 0.4)",
+              fontSize: "1.2rem",
+              fontWeight: 700,
+              fontFamily: "var(--font-heading)",
+              letterSpacing: "-0.02em",
+              color: "#ffffff",
             }}
           >
-            <IconDrill size={20} className="" />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", textAlign: "left" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "1.15rem", fontWeight: 800, letterSpacing: "-0.02em" }}>
-                Repo<span style={{ color: "var(--brand-blue)" }}>Drill</span>
-              </span>
-              <span
-                style={{
-                  fontSize: "0.65rem",
-                  fontWeight: 700,
-                  letterSpacing: "0.08em",
-                  padding: "2px 6px",
-                  borderRadius: "4px",
-                  background: "rgba(59, 130, 246, 0.15)",
-                  color: "#60a5fa",
-                  border: "1px solid rgba(59, 130, 246, 0.3)",
-                }}
-              >
-                PRACTICE GYM
-              </span>
-            </div>
-            <span style={{ fontSize: "0.72rem", color: "var(--text-dim)", lineHeight: 1 }}>
-              Real-World Multi-File Software Drills
-            </span>
-          </div>
+            Repo<span style={{ color: "var(--cosmic-violet)" }}>Drill</span>
+          </span>
         </button>
 
         {currentView === "workspace" && activeChallengeTitle && (
@@ -81,22 +56,22 @@ export default function Navbar({
               display: "flex",
               alignItems: "center",
               gap: "8px",
-              marginLeft: "12px",
-              paddingLeft: "16px",
+              marginLeft: "8px",
+              paddingLeft: "14px",
               borderLeft: "1px solid var(--border-subtle)",
             }}
           >
             <button
               onClick={onNavigateHome}
               className="btn-ghost"
-              style={{ fontSize: "0.85rem", padding: "4px 8px" }}
+              style={{ fontSize: "0.82rem", padding: "4px 8px" }}
             >
               <IconArrowLeft size={14} /> Catalog
             </button>
-            <span style={{ color: "var(--text-dim)" }}>/</span>
+            <span style={{ color: "var(--text-dim)", fontSize: "0.8rem" }}>/</span>
             <span
               style={{
-                fontSize: "0.88rem",
+                fontSize: "0.85rem",
                 fontWeight: 600,
                 color: "var(--text-main)",
                 maxWidth: "280px",
@@ -111,66 +86,41 @@ export default function Navbar({
         )}
       </div>
 
-      {/* Right: Sandbox Status & Quick Links */}
-      <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-        {/* Sandbox Security Indicator */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            background: "rgba(16, 185, 129, 0.08)",
-            border: "1px solid rgba(16, 185, 129, 0.25)",
-            padding: "5px 12px",
-            borderRadius: "20px",
-            fontSize: "0.78rem",
-            color: "#34d399",
-            fontWeight: 500,
-          }}
-          title="Sandbox isolated: network disabled, memory capped at 128MB, containerized runner"
-        >
-          <span className="status-dot" />
-          <IconShield size={14} />
-          <span>Locked Sandbox Active</span>
-        </div>
-
+      {/* Right Controls */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
         {currentView === "workspace" ? (
           <button
             onClick={onNavigateHome}
             className="btn-secondary"
             style={{ fontSize: "0.82rem", padding: "6px 12px" }}
           >
-            Change Drill
+            All Challenges
           </button>
         ) : (
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             <a
-              href="#drills"
+              href="#challenges"
               style={{
-                fontSize: "0.85rem",
+                fontSize: "0.86rem",
                 color: "var(--text-muted)",
-                padding: "6px 10px",
-                borderRadius: "6px",
                 transition: "color 0.15s ease",
               }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-main)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
             >
-              Drill Catalog
+              Challenges
             </a>
             <a
-              href="#sandbox-architecture"
+              href="#how-it-works"
               style={{
-                fontSize: "0.85rem",
+                fontSize: "0.86rem",
                 color: "var(--text-muted)",
-                padding: "6px 10px",
-                borderRadius: "6px",
                 transition: "color 0.15s ease",
               }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-main)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
             >
-              Sandbox Security
+              How It Works
             </a>
           </div>
         )}

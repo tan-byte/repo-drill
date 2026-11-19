@@ -1,15 +1,13 @@
 import React, { useState, useMemo } from "react";
 import {
   IconPlay,
-  IconShield,
   IconCode,
   IconFileCode,
   IconSearch,
-  IconCpu,
   IconCheckCircle,
-  IconTerminal,
-  IconLock,
+  IconShield,
 } from "./Icons";
+import Mascot from "./Mascot";
 
 export default function HomePage({
   challenges = [],
@@ -51,382 +49,125 @@ export default function HomePage({
   }, [challenges, selectedCategory, selectedDifficulty, searchQuery]);
 
   return (
-    <div style={{ paddingBottom: "80px" }}>
-      {/* Hero Section */}
-      <section style={{ paddingTop: "40px", paddingBottom: "36px" }}>
+    <div style={{ paddingBottom: "80px", position: "relative", zIndex: 1 }}>
+      {/* Clean, Breathable Hero */}
+      <section style={{ paddingTop: "48px", paddingBottom: "36px" }}>
         <div className="container">
-          <div className="hero-glow-card">
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                background: "rgba(59, 130, 246, 0.12)",
-                border: "1px solid rgba(59, 130, 246, 0.3)",
-                padding: "6px 14px",
-                borderRadius: "30px",
-                fontSize: "0.8rem",
-                color: "#60a5fa",
-                fontWeight: 600,
-                marginBottom: "20px",
-              }}
-            >
-              <IconShield size={15} />
-              <span>PRACTICE REAL REPOSITORIES INSIDE A LOCKED-DOWN SANDBOX</span>
-            </div>
-
-            <h1
-              style={{
-                fontSize: "clamp(2rem, 4vw, 3.2rem)",
-                fontWeight: 800,
-                letterSpacing: "-0.03em",
-                lineHeight: 1.15,
-                marginBottom: "16px",
-                maxWidth: "840px",
-              }}
-            >
-              The safe practice gym for{" "}
-              <span
-                style={{
-                  background: "linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #93c5fd 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                real software jobs
-              </span>
-              .
-            </h1>
-
-            <p
-              style={{
-                fontSize: "1.1rem",
-                color: "var(--text-muted)",
-                maxWidth: "760px",
-                lineHeight: 1.6,
-                marginBottom: "28px",
-              }}
-            >
-              Solving single-file algorithm puzzles doesn't prepare you for real developer jobs.
-              RepoDrill loads authentic, multi-file codebases in your browser where you navigate
-              imports, diagnose stack traces, fix edge-case bugs, and add features safely inside
-              an isolated sandbox container.
-            </p>
-
-            {/* Quick Actions */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "14px", marginBottom: "36px" }}>
-              <button
-                onClick={() => {
-                  if (challenges.length > 0) {
-                    onSelectChallenge(challenges[0].id);
-                  }
-                }}
-                className="btn-primary"
-                style={{ padding: "12px 24px", fontSize: "1rem" }}
-              >
-                <IconPlay size={18} />
-                <span>Start Featured Drill</span>
-              </button>
-
-              <a
-                href="#drills"
-                className="btn-secondary"
-                style={{ padding: "12px 20px", fontSize: "0.95rem" }}
-              >
-                <IconCode size={18} />
-                <span>Explore All {challenges.length} Drills</span>
-              </a>
-
-              <a
-                href="#sandbox-architecture"
-                className="btn-ghost"
-                style={{ padding: "12px 18px", fontSize: "0.92rem", color: "var(--text-muted)" }}
-              >
-                <IconShield size={16} />
-                <span>How Sandbox Works</span>
-              </a>
-            </div>
-
-            {/* Metrics Ribbon */}
+          <div className="hero-clean-card">
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: "16px",
-                paddingTop: "24px",
-                borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-              }}
-            >
-              <div>
-                <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--text-main)" }}>
-                  Multi-File Repos
-                </div>
-                <div style={{ fontSize: "0.82rem", color: "var(--text-dim)" }}>
-                  Cross-file imports & models
-                </div>
-              </div>
-
-              <div>
-                <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "#34d399" }}>
-                  100% Locked Sandbox
-                </div>
-                <div style={{ fontSize: "0.82rem", color: "var(--text-dim)" }}>
-                  Network cut, 128MB RAM cap
-                </div>
-              </div>
-
-              <div>
-                <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "#60a5fa" }}>
-                  Real Error Traces
-                </div>
-                <div style={{ fontSize: "0.82rem", color: "var(--text-dim)" }}>
-                  Pytest & PEP8 linter feedback
-                </div>
-              </div>
-
-              <div>
-                <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "#c084fc" }}>
-                  Zero Local Setup
-                </div>
-                <div style={{ fontSize: "0.82rem", color: "var(--text-dim)" }}>
-                  Runs instantly in your browser
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Sandbox Architecture Flow Visualization */}
-      <section
-        id="sandbox-architecture"
-        style={{
-          padding: "24px 0 40px 0",
-        }}
-      >
-        <div className="container">
-          <div
-            style={{
-              background: "var(--bg-surface)",
-              border: "1px solid var(--border-subtle)",
-              borderRadius: "14px",
-              padding: "28px 24px",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
+                gridTemplateColumns: "1fr auto",
                 alignItems: "center",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-                gap: "12px",
-                marginBottom: "20px",
+                gap: "36px",
               }}
             >
+              {/* Left Column */}
               <div>
-                <div
+                <h1
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    fontSize: "0.78rem",
+                    fontSize: "clamp(2rem, 3.8vw, 3.2rem)",
                     fontWeight: 700,
-                    color: "var(--brand-blue)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
+                    lineHeight: 1.18,
+                    marginBottom: "16px",
+                    color: "#ffffff",
+                    letterSpacing: "-0.025em",
                   }}
                 >
-                  <IconLock size={14} /> Security by Design
-                </div>
-                <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginTop: "4px" }}>
-                  How Untrusted Code Runs Safely
-                </h3>
-              </div>
-              <span
-                style={{
-                  fontSize: "0.8rem",
-                  color: "var(--text-dim)",
-                  background: "var(--bg-elevated)",
-                  padding: "4px 10px",
-                  borderRadius: "6px",
-                  border: "1px solid var(--border-subtle)",
-                }}
-              >
-                Ephemeral Docker Container Isolation
-              </span>
-            </div>
+                  Practice coding on{" "}
+                  <span
+                    style={{
+                      background: "linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #38bdf8 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                    }}
+                  >
+                    real codebases
+                  </span>
+                  .
+                </h1>
 
-            {/* Architecture Steps Flow */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: "16px",
-                position: "relative",
-              }}
-            >
-              <div
-                style={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: "10px",
-                  padding: "16px",
-                }}
-              >
+                <p
+                  style={{
+                    fontSize: "1.06rem",
+                    color: "var(--text-muted)",
+                    maxWidth: "620px",
+                    lineHeight: 1.6,
+                    marginBottom: "26px",
+                  }}
+                >
+                  Instead of single-file puzzle questions, RepoDrill drops you into small,
+                  authentic multi-file projects. Fix bugs, read error logs, and build features —
+                  tested safely inside an isolated browser sandbox.
+                </p>
+
+                {/* Primary Actions */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "28px" }}>
+                  <button
+                    onClick={() => {
+                      if (challenges.length > 0) {
+                        onSelectChallenge(challenges[0].id);
+                      }
+                    }}
+                    className="btn-primary"
+                    style={{ padding: "11px 22px", fontSize: "0.95rem" }}
+                  >
+                    <IconPlay size={16} />
+                    <span>Start First Challenge</span>
+                  </button>
+
+                  <a
+                    href="#challenges"
+                    className="btn-secondary"
+                    style={{ padding: "11px 18px", fontSize: "0.92rem" }}
+                  >
+                    <IconCode size={16} />
+                    <span>Browse All ({challenges.length})</span>
+                  </a>
+                </div>
+
+                {/* Subtle Value Badges */}
                 <div
                   style={{
                     display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    marginBottom: "8px",
+                    flexWrap: "wrap",
+                    gap: "20px",
+                    fontSize: "0.82rem",
+                    color: "var(--text-dim)",
+                    paddingTop: "18px",
+                    borderTop: "1px solid rgba(255, 255, 255, 0.06)",
                   }}
                 >
-                  <span
-                    style={{
-                      width: "24px",
-                      height: "24px",
-                      borderRadius: "50%",
-                      background: "rgba(59, 130, 246, 0.2)",
-                      color: "#60a5fa",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "0.75rem",
-                      fontWeight: 700,
-                    }}
-                  >
-                    1
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span className="status-dot" /> Multi-file projects
                   </span>
-                  <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>Browser Editor</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span className="status-dot" /> Safe sandbox testing
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span className="status-dot" /> Real pytest &amp; error logs
+                  </span>
                 </div>
-                <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", lineHeight: 1.4 }}>
-                  You inspect and edit repository files in the formal workspace without installing dependencies locally.
-                </p>
               </div>
 
+              {/* Right Column: Friendly Mascot */}
               <div
                 style={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: "10px",
-                  padding: "16px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "6px",
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    marginBottom: "8px",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: "24px",
-                      height: "24px",
-                      borderRadius: "50%",
-                      background: "rgba(16, 185, 129, 0.2)",
-                      color: "#34d399",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "0.75rem",
-                      fontWeight: 700,
-                    }}
-                  >
-                    2
-                  </span>
-                  <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>Ephemeral Scratchpad</span>
-                </div>
-                <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", lineHeight: 1.4 }}>
-                  Your modified files are safely mounted into an ephemeral temporary workspace with path traversal guards.
-                </p>
-              </div>
-
-              <div
-                style={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: "10px",
-                  padding: "16px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    marginBottom: "8px",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: "24px",
-                      height: "24px",
-                      borderRadius: "50%",
-                      background: "rgba(245, 158, 11, 0.2)",
-                      color: "#fbbf24",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "0.75rem",
-                      fontWeight: 700,
-                    }}
-                  >
-                    3
-                  </span>
-                  <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>Locked Container</span>
-                </div>
-                <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", lineHeight: 1.4 }}>
-                  Execution occurs with <code>network_disabled=True</code>, 128MB RAM limit, 0.5 CPU cap, and zero host disk access.
-                </p>
-              </div>
-
-              <div
-                style={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: "10px",
-                  padding: "16px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    marginBottom: "8px",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: "24px",
-                      height: "24px",
-                      borderRadius: "50%",
-                      background: "rgba(168, 85, 247, 0.2)",
-                      color: "#c084fc",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "0.75rem",
-                      fontWeight: 700,
-                    }}
-                  >
-                    4
-                  </span>
-                  <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>Hidden Test Engine</span>
-                </div>
-                <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", lineHeight: 1.4 }}>
-                  Read-only hidden pytest suite evaluates regressions while linters check PEP8 formatting and code safety.
-                </p>
+                <Mascot size="lg" withBubble={true} interactive={true} />
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Main Drills Section */}
-      <section id="drills" style={{ paddingTop: "20px" }}>
+      {/* Challenges Section */}
+      <section id="challenges" style={{ paddingTop: "24px" }}>
         <div className="container">
           {/* Header & Search */}
           <div
@@ -436,40 +177,20 @@ export default function HomePage({
               alignItems: "flex-end",
               flexWrap: "wrap",
               gap: "16px",
-              marginBottom: "24px",
+              marginBottom: "20px",
             }}
           >
             <div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  fontSize: "0.78rem",
-                  fontWeight: 700,
-                  color: "var(--brand-blue)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                }}
-              >
-                <IconCode size={14} /> Repository Catalog
-              </div>
-              <h2 style={{ fontSize: "1.75rem", fontWeight: 800, marginTop: "2px" }}>
-                Select Your Drill Workspace
+              <h2 style={{ fontSize: "1.65rem", fontWeight: 700, color: "#ffffff" }}>
+                Choose a Challenge
               </h2>
               <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginTop: "4px" }}>
-                Choose a category, inspect the repository files, and jump into the minimal workspace.
+                Select a category or search by topic to load a workspace.
               </p>
             </div>
 
-            {/* Search Input */}
-            <div
-              style={{
-                position: "relative",
-                width: "100%",
-                maxWidth: "320px",
-              }}
-            >
+            {/* Clean Search Input */}
+            <div style={{ position: "relative", width: "100%", maxWidth: "300px" }}>
               <div
                 style={{
                   position: "absolute",
@@ -479,11 +200,11 @@ export default function HomePage({
                   color: "var(--text-dim)",
                 }}
               >
-                <IconSearch size={16} />
+                <IconSearch size={15} />
               </div>
               <input
                 type="text"
-                placeholder="Search drills, tags, or files..."
+                placeholder="Search by keyword, tag, file..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
@@ -491,8 +212,8 @@ export default function HomePage({
                   background: "var(--bg-surface)",
                   border: "1px solid var(--border-subtle)",
                   borderRadius: "8px",
-                  padding: "9px 12px 9px 36px",
-                  fontSize: "0.88rem",
+                  padding: "8px 12px 8px 34px",
+                  fontSize: "0.85rem",
                   color: "var(--text-main)",
                   outline: "none",
                 }}
@@ -522,12 +243,12 @@ export default function HomePage({
               justifyContent: "space-between",
               alignItems: "center",
               flexWrap: "wrap",
-              gap: "12px",
+              gap: "10px",
               background: "var(--bg-surface)",
               border: "1px solid var(--border-subtle)",
               borderRadius: "10px",
-              padding: "10px 16px",
-              marginBottom: "24px",
+              padding: "8px 14px",
+              marginBottom: "22px",
             }}
           >
             {/* Category Pills */}
@@ -539,11 +260,11 @@ export default function HomePage({
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
                     style={{
-                      padding: "6px 12px",
+                      padding: "5px 12px",
                       borderRadius: "6px",
                       fontSize: "0.82rem",
                       fontWeight: active ? 600 : 500,
-                      background: active ? "var(--brand-blue)" : "transparent",
+                      background: active ? "var(--cosmic-purple)" : "transparent",
                       color: active ? "#ffffff" : "var(--text-muted)",
                       transition: "all 0.15s ease",
                     }}
@@ -554,9 +275,9 @@ export default function HomePage({
               })}
             </div>
 
-            {/* Difficulty Selector */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "0.78rem", color: "var(--text-dim)", fontWeight: 600 }}>
+            {/* Difficulty Filter */}
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ fontSize: "0.76rem", color: "var(--text-dim)", fontWeight: 600 }}>
                 DIFFICULTY:
               </span>
               {["All", "Easy", "Medium", "Hard"].map((diff) => {
@@ -572,7 +293,7 @@ export default function HomePage({
                       fontWeight: active ? 600 : 500,
                       background: active ? "var(--bg-elevated)" : "transparent",
                       color: active ? "var(--text-main)" : "var(--text-dim)",
-                      border: active ? "1px solid var(--border-strong)" : "1px solid transparent",
+                      border: active ? "1px solid var(--border-cosmic)" : "1px solid transparent",
                     }}
                   >
                     {diff}
@@ -582,23 +303,22 @@ export default function HomePage({
             </div>
           </div>
 
-          {/* Drills Grid */}
+          {/* Challenge Cards Grid */}
           {filteredChallenges.length === 0 ? (
             <div
               style={{
                 textAlign: "center",
-                padding: "60px 20px",
+                padding: "48px 20px",
                 background: "var(--bg-surface)",
                 borderRadius: "12px",
                 border: "1px solid var(--border-subtle)",
               }}
             >
-              <div style={{ color: "var(--text-dim)", marginBottom: "12px" }}>
-                <IconSearch size={36} />
-              </div>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 700 }}>No matching drills found</h3>
-              <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginTop: "4px" }}>
-                Try adjusting your search query or reset category filters.
+              <h3 style={{ fontSize: "1.15rem", fontWeight: 600, color: "var(--text-main)" }}>
+                No challenges match your search
+              </h3>
+              <p style={{ color: "var(--text-muted)", fontSize: "0.88rem", marginTop: "4px" }}>
+                Try adjusting keywords or clearing category filters.
               </p>
               <button
                 onClick={() => {
@@ -607,7 +327,7 @@ export default function HomePage({
                   setSearchQuery("");
                 }}
                 className="btn-secondary"
-                style={{ marginTop: "16px" }}
+                style={{ marginTop: "14px", fontSize: "0.85rem" }}
               >
                 Reset Filters
               </button>
@@ -625,21 +345,21 @@ export default function HomePage({
                     : "badge-medium";
 
                 return (
-                  <div key={challenge.id} className="drill-card">
-                    {/* Card Top: Badges & Time */}
+                  <div key={challenge.id} className="drill-clean-card">
+                    {/* Top Row: Badges & Time */}
                     <div
                       style={{
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
-                        marginBottom: "12px",
+                        marginBottom: "10px",
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                         <span className={`badge ${badgeClass}`}>
                           {challenge.difficulty}
                         </span>
-                        <span className="badge badge-mode">
+                        <span className="badge badge-tag">
                           {challenge.mode}
                         </span>
                       </div>
@@ -648,21 +368,20 @@ export default function HomePage({
                         style={{
                           fontSize: "0.75rem",
                           color: "var(--text-dim)",
-                          fontWeight: 500,
                         }}
                       >
-                        ⏱ ~{challenge.estimated_minutes || 15} min
+                        ~{challenge.estimated_minutes || 15} min
                       </span>
                     </div>
 
-                    {/* Title */}
+                    {/* Challenge Title */}
                     <h3
                       style={{
-                        fontSize: "1.18rem",
-                        fontWeight: 700,
-                        color: "var(--text-main)",
-                        lineHeight: 1.3,
-                        marginBottom: "8px",
+                        fontSize: "1.12rem",
+                        fontWeight: 600,
+                        color: "#ffffff",
+                        lineHeight: 1.35,
+                        marginBottom: "6px",
                       }}
                     >
                       {challenge.title}
@@ -674,22 +393,22 @@ export default function HomePage({
                         fontSize: "0.85rem",
                         color: "var(--text-muted)",
                         lineHeight: 1.5,
-                        marginBottom: "16px",
+                        marginBottom: "14px",
                         flex: 1,
                       }}
                     >
                       {challenge.description}
                     </p>
 
-                    {/* Repository Files Preview Bar */}
+                    {/* File Peek Bar */}
                     <div
                       style={{
                         background: "var(--bg-editor)",
                         border: "1px solid var(--border-subtle)",
                         borderRadius: "6px",
-                        padding: "8px 10px",
-                        marginBottom: "16px",
-                        fontSize: "0.78rem",
+                        padding: "7px 10px",
+                        marginBottom: "14px",
+                        fontSize: "0.76rem",
                       }}
                     >
                       <div
@@ -702,12 +421,14 @@ export default function HomePage({
                       >
                         <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                           <IconFileCode size={13} />
-                          <strong>{challenge.files_count || (challenge.file_names && challenge.file_names.length) || 1} files</strong> in repository
+                          <span>
+                            <strong>{challenge.files_count || (challenge.file_names && challenge.file_names.length) || 1} files</strong> in project
+                          </span>
                         </span>
                         <button
                           onClick={() => setPreviewFilesId(isPreviewing ? null : challenge.id)}
                           style={{
-                            color: "var(--brand-blue)",
+                            color: "var(--cosmic-violet)",
                             fontWeight: 600,
                             fontSize: "0.74rem",
                           }}
@@ -716,7 +437,7 @@ export default function HomePage({
                         </button>
                       </div>
 
-                      {/* Expanded file list */}
+                      {/* File preview list */}
                       {isPreviewing && challenge.file_names && (
                         <div
                           style={{
@@ -725,7 +446,7 @@ export default function HomePage({
                             borderTop: "1px solid rgba(255, 255, 255, 0.05)",
                             display: "flex",
                             flexDirection: "column",
-                            gap: "4px",
+                            gap: "3px",
                           }}
                         >
                           {challenge.file_names.map((fn) => (
@@ -748,46 +469,19 @@ export default function HomePage({
                       )}
                     </div>
 
-                    {/* Tags */}
-                    {challenge.tags && challenge.tags.length > 0 && (
-                      <div
-                        style={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: "6px",
-                          marginBottom: "18px",
-                        }}
-                      >
-                        {challenge.tags.map((t) => (
-                          <span
-                            key={t}
-                            style={{
-                              fontSize: "0.7rem",
-                              color: "var(--text-dim)",
-                              background: "rgba(255, 255, 255, 0.04)",
-                              padding: "2px 6px",
-                              borderRadius: "4px",
-                            }}
-                          >
-                            #{t}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Action Button */}
+                    {/* Open Button */}
                     <button
                       onClick={() => onSelectChallenge(challenge.id)}
                       className="btn-primary"
                       style={{
                         width: "100%",
                         justifyContent: "center",
-                        padding: "10px",
-                        fontSize: "0.9rem",
+                        padding: "9px",
+                        fontSize: "0.88rem",
                       }}
                     >
-                      <IconPlay size={15} />
-                      <span>Launch Workspace</span>
+                      <IconPlay size={14} />
+                      <span>Open Workspace</span>
                     </button>
                   </div>
                 );
@@ -797,42 +491,30 @@ export default function HomePage({
         </div>
       </section>
 
-      {/* Comparison: Why Multi-file Repos Matter */}
-      <section style={{ paddingTop: "60px" }}>
+      {/* Clean "How It Works" Section */}
+      <section id="how-it-works" style={{ paddingTop: "52px" }}>
         <div className="container">
           <div
             style={{
               background: "var(--bg-surface)",
               border: "1px solid var(--border-subtle)",
-              borderRadius: "16px",
-              padding: "36px",
+              borderRadius: "14px",
+              padding: "32px 28px",
             }}
           >
-            <div style={{ textAlign: "center", maxWidth: "680px", margin: "0 auto 32px auto" }}>
-              <span
-                style={{
-                  fontSize: "0.78rem",
-                  fontWeight: 700,
-                  color: "var(--brand-blue)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                }}
-              >
-                Beyond Algorithm Puzzles
-              </span>
-              <h2 style={{ fontSize: "1.8rem", fontWeight: 800, marginTop: "4px" }}>
-                Why Multi-File Drills Prepare You for Real Jobs
+            <div style={{ textAlign: "center", maxWidth: "600px", margin: "0 auto 28px auto" }}>
+              <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#ffffff" }}>
+                How RepoDrill Works
               </h2>
-              <p style={{ color: "var(--text-muted)", fontSize: "0.92rem", marginTop: "8px" }}>
-                Standard interview platforms test academic algorithms. Real software jobs require
-                diagnosing interactions between services, models, and tests.
+              <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginTop: "4px" }}>
+                Practice real engineering tasks in 3 simple steps without installing anything locally.
               </p>
             </div>
 
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
                 gap: "20px",
               }}
             >
@@ -841,80 +523,98 @@ export default function HomePage({
                   background: "var(--bg-card)",
                   border: "1px solid var(--border-subtle)",
                   borderRadius: "10px",
-                  padding: "22px",
+                  padding: "20px",
                 }}
               >
-                <div style={{ color: "var(--danger-rose)", fontWeight: 700, marginBottom: "8px" }}>
-                  Traditional Coding Sites
-                </div>
-                <ul
+                <div
                   style={{
-                    listStyle: "none",
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "6px",
+                    background: "rgba(139, 92, 246, 0.15)",
+                    color: "var(--cosmic-violet)",
                     display: "flex",
-                    flexDirection: "column",
-                    gap: "10px",
-                    fontSize: "0.86rem",
-                    color: "var(--text-muted)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: 700,
+                    fontSize: "0.85rem",
+                    marginBottom: "12px",
                   }}
                 >
-                  <li style={{ display: "flex", gap: "8px" }}>
-                    <span style={{ color: "var(--danger-rose)" }}>✗</span>
-                    Single file, single function isolated sandbox
-                  </li>
-                  <li style={{ display: "flex", gap: "8px" }}>
-                    <span style={{ color: "var(--danger-rose)" }}>✗</span>
-                    Abstract puzzles with zero real business logic
-                  </li>
-                  <li style={{ display: "flex", gap: "8px" }}>
-                    <span style={{ color: "var(--danger-rose)" }}>✗</span>
-                    No exposure to error tracebacks or linters
-                  </li>
-                  <li style={{ display: "flex", gap: "8px" }}>
-                    <span style={{ color: "var(--danger-rose)" }}>✗</span>
-                    Doesn't test how code changes affect other files
-                  </li>
-                </ul>
+                  1
+                </div>
+                <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "6px" }}>
+                  Pick a Project
+                </h3>
+                <p style={{ fontSize: "0.84rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
+                  Choose from e-commerce carts, authentication services, rate limiters, or data exporters.
+                </p>
               </div>
 
               <div
                 style={{
                   background: "var(--bg-card)",
-                  border: "1px solid rgba(16, 185, 129, 0.4)",
+                  border: "1px solid var(--border-subtle)",
                   borderRadius: "10px",
-                  padding: "22px",
-                  boxShadow: "0 4px 20px rgba(16, 185, 129, 0.08)",
+                  padding: "20px",
                 }}
               >
-                <div style={{ color: "#34d399", fontWeight: 700, marginBottom: "8px" }}>
-                  RepoDrill Practice Gym
-                </div>
-                <ul
+                <div
                   style={{
-                    listStyle: "none",
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "6px",
+                    background: "rgba(56, 189, 248, 0.15)",
+                    color: "var(--cosmic-cyan)",
                     display: "flex",
-                    flexDirection: "column",
-                    gap: "10px",
-                    fontSize: "0.86rem",
-                    color: "var(--text-main)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: 700,
+                    fontSize: "0.85rem",
+                    marginBottom: "12px",
                   }}
                 >
-                  <li style={{ display: "flex", gap: "8px" }}>
-                    <span style={{ color: "#34d399" }}>✓</span>
-                    Realistic multi-file codebases with models & utils
-                  </li>
-                  <li style={{ display: "flex", gap: "8px" }}>
-                    <span style={{ color: "#34d399" }}>✓</span>
-                    Authentic bug tickets, memory spikes, & auth holes
-                  </li>
-                  <li style={{ display: "flex", gap: "8px" }}>
-                    <span style={{ color: "#34d399" }}>✓</span>
-                    Pytest assertion logs, stack traces & style checks
-                  </li>
-                  <li style={{ display: "flex", gap: "8px" }}>
-                    <span style={{ color: "#34d399" }}>✓</span>
-                    100% locked-down sandbox safe for experimentation
-                  </li>
-                </ul>
+                  2
+                </div>
+                <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "6px" }}>
+                  Edit the Files
+                </h3>
+                <p style={{ fontSize: "0.84rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
+                  Explore the multi-file codebase in the browser editor and write your fix or feature.
+                </p>
+              </div>
+
+              <div
+                style={{
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border-subtle)",
+                  borderRadius: "10px",
+                  padding: "20px",
+                }}
+              >
+                <div
+                  style={{
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "6px",
+                    background: "rgba(16, 185, 129, 0.15)",
+                    color: "#34d399",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: 700,
+                    fontSize: "0.85rem",
+                    marginBottom: "12px",
+                  }}
+                >
+                  3
+                </div>
+                <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "6px" }}>
+                  Test in Sandbox
+                </h3>
+                <p style={{ fontSize: "0.84rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
+                  Run hidden pytest unit tests and PEP8 style checks inside an isolated container.
+                </p>
               </div>
             </div>
           </div>

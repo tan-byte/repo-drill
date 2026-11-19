@@ -282,17 +282,14 @@ export default function Workspace({
               display: "flex",
               alignItems: "center",
               gap: "6px",
-              fontSize: "0.74rem",
+              fontSize: "0.75rem",
               color: "#34d399",
-              background: "rgba(16, 185, 129, 0.08)",
-              padding: "4px 8px",
-              borderRadius: "4px",
-              border: "1px solid rgba(16, 185, 129, 0.2)",
+              padding: "3px 8px",
             }}
+            title="Isolated sandbox active"
           >
             <span className="status-dot" />
-            <IconLock size={12} />
-            <span>Sandbox Guard Active</span>
+            <span>Sandbox</span>
           </div>
 
           <button
@@ -536,7 +533,7 @@ export default function Workspace({
                               width: "6px",
                               height: "6px",
                               borderRadius: "50%",
-                              background: "var(--brand-blue)",
+                              background: "var(--cosmic-purple)",
                             }}
                           />
                         )}
@@ -582,7 +579,7 @@ export default function Workspace({
                     background: isActive ? "var(--bg-editor)" : "transparent",
                     color: isActive ? "var(--text-main)" : "var(--text-dim)",
                     borderRight: "1px solid var(--border-subtle)",
-                    borderTop: isActive ? "2px solid var(--brand-blue)" : "2px solid transparent",
+                    borderTop: isActive ? "2px solid var(--cosmic-purple)" : "2px solid transparent",
                   }}
                 >
                   <span className="mono">{tab}</span>
@@ -592,7 +589,7 @@ export default function Workspace({
                         width: "6px",
                         height: "6px",
                         borderRadius: "50%",
-                        background: "var(--brand-blue)",
+                        background: "var(--cosmic-purple)",
                       }}
                     />
                   )}

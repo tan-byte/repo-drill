@@ -81,7 +81,13 @@ export default function App() {
   const activeChallenge = challenges.find((c) => c.id === selectedChallengeId);
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", position: "relative" }}>
+      {/* Subtle Starry Universe Background */}
+      <div className="starry-universe">
+        <div className="star-layer-1" />
+        <div className="star-layer-2" />
+      </div>
+
       <Navbar
         currentView={currentView}
         onNavigateHome={handleNavigateHome}
