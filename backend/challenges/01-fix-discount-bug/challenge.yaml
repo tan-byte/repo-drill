@@ -1,0 +1,13 @@
+id: "01-fix-discount-bug"
+title: "Fix Promo Code Calculation Bug"
+mode: "Bug Fix"
+difficulty: "Easy"
+category: "Bug Fixing"
+estimated_minutes: 10
+tags: ["python", "e-commerce", "math", "pytest"]
+description: "Users report that applying promo code SAVE20 incorrectly deducts a flat $20 instead of 20% off their subtotal. Fix promo code calculation across cart.py and promo.py."
+test_command: "PYTHONPATH=starter pytest hidden_tests/ -q"
+lint_command: "flake8 starter/ --max-line-length=100"
+hints:
+  - "Inspect promo.py: SAVE20 currently returns a fixed 20.0 instead of calculating (subtotal * 0.20)."
+  - "In cart.py, ensure subtotal cannot become negative and rounds to 2 decimal places."

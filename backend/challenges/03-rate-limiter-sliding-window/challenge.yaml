@@ -1,0 +1,13 @@
+id: "03-rate-limiter-sliding-window"
+title: "Implement Sliding Window Rate Limiter"
+mode: "Feature Addition"
+difficulty: "Medium"
+category: "Feature Addition"
+estimated_minutes: 20
+tags: ["python", "infra", "algorithms", "rate-limiting", "concurrency"]
+description: "Our public API requires rate limiting to prevent abuse. Implement SlidingWindowLimiter in rate_limiter.py to track request timestamps within rolling windows and prune expired records."
+test_command: "PYTHONPATH=starter pytest hidden_tests/ -q"
+lint_command: "flake8 starter/ --max-line-length=100"
+hints:
+  - "Filter out timestamps strictly older than (current_time - window_seconds)."
+  - "If len(valid_timestamps) < max_requests, record the new timestamp and return True."

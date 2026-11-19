@@ -1,0 +1,13 @@
+id: "02-jwt-token-expiration"
+title: "Fix JWT Expiration & Role Authorization"
+mode: "Security Audit"
+difficulty: "Medium"
+category: "Security & Auth"
+estimated_minutes: 15
+tags: ["python", "auth", "jwt", "security", "middleware"]
+description: "Security audit discovered that verify_token fails to validate the expiration timestamp, accepting expired sessions. Furthermore, require_role allows unauthorized role access. Fix token validation and RBAC checks."
+test_command: "PYTHONPATH=starter pytest hidden_tests/ -q"
+lint_command: "flake8 starter/ --max-line-length=100"
+hints:
+  - "In auth.py: check payload['exp'] against current_time. If current_time >= payload['exp'], raise TokenExpiredError or return None."
+  - "In middleware.py: require_role should check if user.role == required_role or if required_role in user.roles."

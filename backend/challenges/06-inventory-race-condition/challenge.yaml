@@ -1,0 +1,13 @@
+id: "06-inventory-race-condition"
+title: "Prevent Inventory Allocation Race Condition"
+mode: "Bug Fix"
+difficulty: "Hard"
+category: "Bug Fixing"
+estimated_minutes: 25
+tags: ["python", "database", "transactions", "e-commerce", "concurrency"]
+description: "Concurrent checkouts are creating negative inventory when stock is low. Implement atomic reservation and automatic rollback for multi-item orders in inventory_service.py."
+test_command: "PYTHONPATH=starter pytest hidden_tests/ -q"
+lint_command: "flake8 starter/ --max-line-length=100"
+hints:
+  - "Before deducting any stock, check if ALL requested items have sufficient quantity."
+  - "Alternatively, if any item fails reservation halfway through, roll back previously deducted quantities."

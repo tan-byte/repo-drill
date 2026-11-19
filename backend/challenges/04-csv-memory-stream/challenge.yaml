@@ -1,0 +1,13 @@
+id: "04-csv-memory-stream"
+title: "Fix Memory Spike in Large CSV Exporter"
+mode: "Refactoring"
+difficulty: "Hard"
+category: "Optimization"
+estimated_minutes: 25
+tags: ["python", "performance", "generators", "streaming", "memory"]
+description: "Exporting large datasets crashes workers with Out-Of-Memory errors because the exporter accumulates all rows in an in-memory string list. Refactor exporter.py to stream CSV lines via a generator."
+test_command: "PYTHONPATH=starter pytest hidden_tests/ -q"
+lint_command: "flake8 starter/ --max-line-length=100"
+hints:
+  - "Instead of assembling a massive list in memory and joining it with newline, yield CSV lines one-by-one."
+  - "Make generate_csv_stream return a Generator[str, None, None] with header as the first yielded item."

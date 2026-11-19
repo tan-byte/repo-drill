@@ -1,0 +1,13 @@
+id: "05-webhook-retry-dispatcher"
+title: "Add Exponential Backoff to Webhook Dispatcher"
+mode: "Feature Addition"
+difficulty: "Medium"
+category: "Feature Addition"
+estimated_minutes: 20
+tags: ["python", "webhooks", "async", "retry", "backoff"]
+description: "Failing external webhook deliveries are currently retried immediately in an uncontrolled loop. Implement exponential backoff retry calculation and maximum retry threshold."
+test_command: "PYTHONPATH=starter pytest hidden_tests/ -q"
+lint_command: "flake8 starter/ --max-line-length=100"
+hints:
+  - "In retry_policy.py: delay = min(max_delay, initial_delay * (multiplier ** attempt))."
+  - "In dispatcher.py: if attempt >= max_attempts, transition event status to 'dead_letter'."
