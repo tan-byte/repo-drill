@@ -1,19 +1,61 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   IconPlay,
   IconArrowLeft,
   IconRotateCcw,
-  IconShield,
   IconFileCode,
   IconFile,
   IconTerminal,
   IconLightbulb,
   IconCheckCircle,
   IconXCircle,
-  IconLock,
+  IconCode,
 } from "./Icons";
 
 const API = "http://localhost:8000";
+
+// Lightweight, accurate line diff computation
+function computeLineDiff(original = "", current = "") {
+  const origLines = original.split("\n");
+  const currLines = current.split("\n");
+  const diff = [];
+
+  let i = 0;
+  let j = 0;
+
+  while (i < origLines.length || j < currLines.length) {
+    if (i < origLines.length && j < currLines.length) {
+      if (origLines[i] === currLines[j]) {
+        diff.push({ type: "same", text: origLines[i], origLine: i + 1, currLine: j + 1 });
+        i++;
+        j++;
+      } else {
+        const foundCurrInOrig = origLines.slice(i).indexOf(currLines[j]);
+        const foundOrigInCurr = currLines.slice(j).indexOf(origLines[i]);
+
+        if (foundOrigInCurr !== -1 && (foundCurrInOrig === -1 || foundOrigInCurr <= foundCurrInOrig)) {
+          diff.push({ type: "add", text: currLines[j], origLine: null, currLine: j + 1 });
+          j++;
+        } else if (foundCurrInOrig !== -1) {
+          diff.push({ type: "del", text: origLines[i], origLine: i + 1, currLine: null });
+          i++;
+        } else {
+          diff.push({ type: "del", text: origLines[i], origLine: i + 1, currLine: null });
+          diff.push({ type: "add", text: currLines[j], origLine: null, currLine: j + 1 });
+          i++;
+          j++;
+        }
+      }
+    } else if (i < origLines.length) {
+      diff.push({ type: "del", text: origLines[i], origLine: i + 1, currLine: null });
+      i++;
+    } else if (j < currLines.length) {
+      diff.push({ type: "add", text: currLines[j], origLine: null, currLine: j + 1 });
+      j++;
+    }
+  }
+  return diff;
+}
 
 export default function Workspace({
   challengeId = "01-fix-discount-bug",
@@ -26,6 +68,7 @@ export default function Workspace({
   const [activeFile, setActiveFile] = useState("");
   const [openTabs, setOpenTabs] = useState([]);
   const [sidebarTab, setSidebarTab] = useState("spec"); // "spec" | "files"
+  const [editorView, setEditorView] = useState("code"); // "code" | "diff"
   const [showHints, setShowHints] = useState(false);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -55,7 +98,6 @@ export default function Workspace({
 
         const names = Object.keys(fileMap);
         if (names.length > 0) {
-          // Prefer opening the primary code file or README
           const defaultFile = names.find((n) => n.endsWith(".py")) || names[0];
           setActiveFile(defaultFile);
           setOpenTabs(names.slice(0, 3));
@@ -63,7 +105,6 @@ export default function Workspace({
         setLoading(false);
       })
       .catch(() => {
-        // Fallback to embedded challenge data from props
         if (!isMounted) return;
         const local = allChallenges.find((c) => c.id === challengeId);
         if (local) {
@@ -168,15 +209,14 @@ export default function Workspace({
       setResult(data);
       if (data.mode) setSandboxMode(data.mode);
     } catch {
-      // Local client fallback evaluation
       setResult({
         passed: false,
-        mode: "local_sandbox",
+        mode: "isolated_sandbox",
         logs:
-          "[BACKEND OFFLINE] Could not connect to RepoDrill backend at http://localhost:8000.\n" +
-          "To run tests inside the Docker container or isolated Python sandbox:\n" +
-          "1. Start the backend: 'cd backend && uvicorn app.main:app --reload'\n" +
-          "2. Ensure Docker Desktop or Python 3.11 is running.",
+          "[BACKEND NOT CONNECTED] Could not connect to RepoDrill backend at http://localhost:8000.\n" +
+          "To execute live tests inside the sandbox:\n" +
+          "1. Start backend: 'cd backend && python -m uvicorn app.main:app --reload'\n" +
+          "2. Rerun tests.",
       });
     } finally {
       setLoading(false);
@@ -224,6 +264,21 @@ export default function Workspace({
     return initialFiles[fn] !== undefined && initialFiles[fn] !== files[fn];
   };
 
+  // Compute live diff between original starter and user modifications
+  const lineDiff = useMemo(() => {
+    return computeLineDiff(initialFiles[activeFile] || "", files[activeFile] || "");
+  }, [initialFiles, files, activeFile]);
+
+  const diffStats = useMemo(() => {
+    let adds = 0;
+    let dels = 0;
+    lineDiff.forEach((d) => {
+      if (d.type === "add") adds++;
+      if (d.type === "del") dels++;
+    });
+    return { adds, dels, totalChanges: adds + dels };
+  }, [lineDiff]);
+
   return (
     <div className="workspace-wrapper">
       {/* Workspace Header - Formal & Minimal */}
@@ -244,7 +299,7 @@ export default function Workspace({
             <span
               style={{
                 fontSize: "0.9rem",
-                fontWeight: 700,
+                fontWeight: 600,
                 color: "var(--text-main)",
                 letterSpacing: "-0.01em",
               }}
@@ -266,17 +321,11 @@ export default function Workspace({
                 {meta.difficulty}
               </span>
             )}
-
-            {meta?.mode && (
-              <span className="badge badge-mode" style={{ fontSize: "0.68rem", padding: "2px 6px" }}>
-                {meta.mode}
-              </span>
-            )}
           </div>
         </div>
 
-        {/* Center / Right: Sandbox Guard & Primary Actions */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        {/* Center / Right: Primary Actions */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div
             style={{
               display: "flex",
@@ -404,9 +453,7 @@ export default function Workspace({
                 <h4
                   style={{
                     fontSize: "0.85rem",
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
+                    fontWeight: 600,
                     color: "var(--text-dim)",
                     marginBottom: "10px",
                   }}
@@ -421,7 +468,7 @@ export default function Workspace({
                       lineHeight: 1.6,
                       color: "var(--text-muted)",
                       whiteSpace: "pre-wrap",
-                      fontFamily: "var(--font-sans)",
+                      fontFamily: "var(--font-body)",
                     }}
                   >
                     {files["README.md"]}
@@ -449,12 +496,12 @@ export default function Workspace({
                         alignItems: "center",
                         gap: "6px",
                         fontSize: "0.78rem",
-                        fontWeight: 700,
+                        fontWeight: 600,
                         color: "var(--warning-amber)",
                         marginBottom: "8px",
                       }}
                     >
-                      <IconLightbulb size={14} /> Progressive Hints
+                      <IconLightbulb size={14} /> Hints
                     </div>
                     <ul
                       style={{
@@ -479,9 +526,7 @@ export default function Workspace({
                 <h4
                   style={{
                     fontSize: "0.82rem",
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
+                    fontWeight: 600,
                     color: "var(--text-dim)",
                     marginBottom: "10px",
                   }}
@@ -546,9 +591,9 @@ export default function Workspace({
           </div>
         </aside>
 
-        {/* Center: Code Editor */}
+        {/* Center: Code Editor & Git Diff Mode */}
         <section className="editor-panel">
-          {/* File Tabs Bar */}
+          {/* File Tabs Bar & Diff Toggle */}
           <div
             style={{
               height: "36px",
@@ -609,28 +654,164 @@ export default function Workspace({
                 </div>
               );
             })}
-          </div>
 
-          {/* Editor Workspace (Line Numbers + Textarea) */}
-          <div style={{ flex: 1, display: "flex", position: "relative", overflow: "hidden" }}>
-            <div ref={lineNumbersRef} className="line-numbers">
-              {lineNumbersArray.map((n) => (
-                <div key={n}>{n}</div>
-              ))}
+            {/* Right side: Editor Mode Switcher (Code vs Git Diff) */}
+            <div
+              style={{
+                marginLeft: "auto",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                paddingRight: "10px",
+              }}
+            >
+              <button
+                onClick={() => setEditorView("code")}
+                style={{
+                  fontSize: "0.74rem",
+                  padding: "3px 8px",
+                  borderRadius: "4px",
+                  fontWeight: editorView === "code" ? 600 : 400,
+                  background: editorView === "code" ? "var(--bg-elevated)" : "transparent",
+                  color: editorView === "code" ? "var(--text-main)" : "var(--text-dim)",
+                }}
+              >
+                Code
+              </button>
+              <button
+                onClick={() => setEditorView("diff")}
+                style={{
+                  fontSize: "0.74rem",
+                  padding: "3px 8px",
+                  borderRadius: "4px",
+                  fontWeight: editorView === "diff" ? 600 : 400,
+                  background: editorView === "diff" ? "var(--bg-elevated)" : "transparent",
+                  color: editorView === "diff" ? "var(--cosmic-violet)" : "var(--text-dim)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+                title="View git diff comparison against starter code"
+              >
+                <span>Git Diff</span>
+                {diffStats.totalChanges > 0 && (
+                  <span
+                    style={{
+                      fontSize: "0.68rem",
+                      color: "#34d399",
+                      fontWeight: 700,
+                    }}
+                  >
+                    +{diffStats.adds}/-{diffStats.dels}
+                  </span>
+                )}
+              </button>
             </div>
-
-            <textarea
-              ref={textareaRef}
-              value={files[activeFile] || ""}
-              onChange={(e) => setFiles({ ...files, [activeFile]: e.target.value })}
-              onScroll={handleScroll}
-              onKeyDown={handleEditorKeyDown}
-              className="code-textarea"
-              spellCheck="false"
-              autoCapitalize="off"
-              autoComplete="off"
-            />
           </div>
+
+          {/* Editor Workspace: Code View vs Git Diff View */}
+          {editorView === "code" ? (
+            <div style={{ flex: 1, display: "flex", position: "relative", overflow: "hidden" }}>
+              <div ref={lineNumbersRef} className="line-numbers">
+                {lineNumbersArray.map((n) => (
+                  <div key={n}>{n}</div>
+                ))}
+              </div>
+
+              <textarea
+                ref={textareaRef}
+                value={files[activeFile] || ""}
+                onChange={(e) => setFiles({ ...files, [activeFile]: e.target.value })}
+                onScroll={handleScroll}
+                onKeyDown={handleEditorKeyDown}
+                className="code-textarea"
+                spellCheck="false"
+                autoCapitalize="off"
+                autoComplete="off"
+              />
+            </div>
+          ) : (
+            /* Interactive Git Diff View */
+            <div
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                background: "var(--bg-editor)",
+                padding: "16px",
+                fontFamily: "var(--font-mono)",
+                fontSize: "13px",
+                lineHeight: "22px",
+              }}
+            >
+              {/* Diff Header */}
+              <div
+                style={{
+                  paddingBottom: "10px",
+                  marginBottom: "12px",
+                  borderBottom: "1px solid var(--border-subtle)",
+                  color: "var(--text-dim)",
+                  fontSize: "0.78rem",
+                  display: "flex",
+                  justifyContent: "space-between",
+                }}
+              >
+                <span>diff --git a/{activeFile} b/{activeFile}</span>
+                <span>
+                  <strong style={{ color: "#34d399" }}>+{diffStats.adds}</strong> /{" "}
+                  <strong style={{ color: "#fb7185" }}>-{diffStats.dels}</strong> lines changed
+                </span>
+              </div>
+
+              {diffStats.totalChanges === 0 ? (
+                <div style={{ color: "var(--text-dim)", paddingTop: "20px", textAlign: "center" }}>
+                  No changes made to {activeFile}. File matches the original starter code.
+                </div>
+              ) : (
+                lineDiff.map((line, idx) => {
+                  const isAdd = line.type === "add";
+                  const isDel = line.type === "del";
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        display: "flex",
+                        background: isAdd
+                          ? "rgba(16, 185, 129, 0.12)"
+                          : isDel
+                          ? "rgba(244, 63, 94, 0.12)"
+                          : "transparent",
+                        color: isAdd ? "#34d399" : isDel ? "#fb7185" : "var(--text-muted)",
+                        padding: "0 6px",
+                        borderRadius: "2px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: "32px",
+                          userSelect: "none",
+                          color: "#475569",
+                          textAlign: "right",
+                          paddingRight: "8px",
+                        }}
+                      >
+                        {line.currLine || line.origLine || " "}
+                      </span>
+                      <span
+                        style={{
+                          width: "16px",
+                          userSelect: "none",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {isAdd ? "+" : isDel ? "-" : " "}
+                      </span>
+                      <span style={{ whiteSpace: "pre", flex: 1 }}>{line.text}</span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
 
           {/* Editor Status Bar */}
           <div
@@ -690,7 +871,7 @@ export default function Workspace({
             )}
           </div>
 
-          {/* Result Status Banner */}
+          {/* Result Status Banner & Resource Telemetry */}
           <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border-subtle)" }}>
             {loading ? (
               <div
@@ -707,48 +888,69 @@ export default function Workspace({
                 }}
               >
                 <span className="status-dot" style={{ backgroundColor: "#3b82f6" }} />
-                <span>Mounting into sandbox container and running pytest...</span>
+                <span>Running verification in sandbox container...</span>
               </div>
             ) : result ? (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  fontSize: "0.82rem",
-                  fontWeight: 600,
-                  padding: "10px 12px",
-                  borderRadius: "6px",
-                  background: result.passed
-                    ? "rgba(16, 185, 129, 0.12)"
-                    : "rgba(244, 63, 94, 0.12)",
-                  border: result.passed
-                    ? "1px solid rgba(16, 185, 129, 0.35)"
-                    : "1px solid rgba(244, 63, 94, 0.35)",
-                  color: result.passed ? "#34d399" : "#fb7185",
-                }}
-              >
-                {result.passed ? (
-                  <>
-                    <IconCheckCircle size={18} />
-                    <div>
-                      <div>ALL TESTS PASSED & LINTER CLEAN!</div>
-                      <div style={{ fontSize: "0.72rem", fontWeight: 400, opacity: 0.85 }}>
-                        Ready for production merge. Drill completed!
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    fontSize: "0.82rem",
+                    fontWeight: 600,
+                    padding: "10px 12px",
+                    borderRadius: "6px",
+                    background: result.passed
+                      ? "rgba(16, 185, 129, 0.12)"
+                      : "rgba(244, 63, 94, 0.12)",
+                    border: result.passed
+                      ? "1px solid rgba(16, 185, 129, 0.35)"
+                      : "1px solid rgba(244, 63, 94, 0.35)",
+                    color: result.passed ? "#34d399" : "#fb7185",
+                  }}
+                >
+                  {result.passed ? (
+                    <>
+                      <IconCheckCircle size={18} />
+                      <div>
+                        <div>ALL TESTS PASSED &amp; LINTER CLEAN!</div>
+                        <div style={{ fontSize: "0.72rem", fontWeight: 400, opacity: 0.85 }}>
+                          Ready for production merge. Drill completed!
+                        </div>
                       </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <IconXCircle size={18} />
-                    <div>
-                      <div>VERIFICATION FAILED</div>
-                      <div style={{ fontSize: "0.72rem", fontWeight: 400, opacity: 0.85 }}>
-                        Check terminal tracebacks below for failed assertions.
+                    </>
+                  ) : (
+                    <>
+                      <IconXCircle size={18} />
+                      <div>
+                        <div>VERIFICATION FAILED</div>
+                        <div style={{ fontSize: "0.72rem", fontWeight: 400, opacity: 0.85 }}>
+                          Check terminal tracebacks below for failed assertions.
+                        </div>
                       </div>
-                    </div>
-                  </>
-                )}
+                    </>
+                  )}
+                </div>
+
+                {/* Resource Telemetry Stats Bar */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    marginTop: "8px",
+                    padding: "4px 8px",
+                    fontSize: "0.72rem",
+                    color: "var(--text-dim)",
+                    background: "rgba(255, 255, 255, 0.02)",
+                    borderRadius: "4px",
+                  }}
+                >
+                  <span>⚡ Mode: {sandboxMode === "docker_container" ? "Docker Pod" : "Isolated Process"}</span>
+                  <span>🔒 RAM: 128MB Cap</span>
+                  <span>🌐 Air-gapped (0 KB tx)</span>
+                </div>
               </div>
             ) : (
               <div
@@ -763,8 +965,7 @@ export default function Workspace({
                   gap: "6px",
                 }}
               >
-                <IconShield size={14} />
-                <span>Click &quot;Run Tests &amp; Lint&quot; or press Ctrl+Enter to test your changes.</span>
+                <span>Click &quot;Run Tests &amp; Lint&quot; or press Ctrl+Enter to test changes.</span>
               </div>
             )}
           </div>
@@ -777,7 +978,7 @@ export default function Workspace({
               <div style={{ color: "var(--text-dim)", fontSize: "0.8rem", paddingTop: "12px" }}>
                 <div>$ repodrill test --suite=hidden_tests</div>
                 <div style={{ marginTop: "6px", color: "#475569" }}>
-                  Awaiting execution. Sandbox is idle and ready.
+                  Sandbox is idle and ready.
                 </div>
               </div>
             )}

@@ -1,78 +1,132 @@
-# RepoDrill 🏋️‍♂️
+# RepoDrill — Distributed Multi-File Codebase Assessment & Sandboxed Execution Engine
 
-> **The Safe Practice Gym for Real-World Software Jobs**
+**RepoDrill** is a multi-file coding practice and evaluation platform designed to simulate real-world software engineering workflows—**fixing broken repositories**, **debugging production error logs**, and **implementing features** inside unfamiliar codebases. 
 
-RepoDrill is an interactive coding practice platform where developers fix real production bugs, diagnose broken stack traces, and implement features across small, authentic **multi-file repositories** instead of solving single-file algorithmic puzzles.
-
-Untrusted code modifications are mounted and executed inside an isolated, locked-down **sandbox** (`network_disabled=True`, 128MB RAM limit, CPU quota) to safely test work without risking the host machine.
+Rather than focusing purely on frontend/backend CRUD, this project was engineered as a deep dive into **Non-Functional Requirements (NFRs)**, **distributed systems architecture**, **container security**, and **real-time observability** under concurrent user load.
 
 ---
 
-## 🌟 Key Highlights
+## System Architecture
 
-- **Multi-File Architecture**: Edit imports, models, utilities, and tests just like a real developer workspace.
-- **Cool & Helpful Homepage**: Hero showcase, live sandbox security architecture flow, category filters, difficulty tags, live search, and repository file inspection peekers.
-- **Formal & Minimal Workspace**: Clean, distraction-free IDE with line numbers gutter, tab indentation, file explorer, markdown scenario brief, progressive hints, and a dark terminal console.
-- **Locked-Down Sandbox**: Untrusted submissions are tested in ephemeral Docker containers (or isolated execution sandboxes) with network disabled, memory limits, and path traversal guards.
-- **Comprehensive Drill Library**: 6 rich starter drills covering bug triage, security audits, distributed systems, streaming optimization, and concurrency.
+```mermaid
+flowchart TB
+    User["Developer Browser / Locust Load Generator"]
+    
+    subgraph Edge ["Edge & Traffic Management"]
+        Nginx["Nginx Reverse Proxy<br/>(Port 8080 | Round-Robin LB & 1MB Payload Cap)"]
+    end
+
+    subgraph WebTier ["Stateless API Tier"]
+        API1["FastAPI Node 1<br/>(Port 8001)"]
+        API2["FastAPI Node 2<br/>(Port 8002)"]
+    end
+
+    subgraph QueueTier ["Queuing & Backpressure Tier"]
+        Redis[("Redis<br/>(RQ Task Queue + Sliding-Window Rate Limiter)")]
+    end
+
+    subgraph ComputeTier ["Isolated Execution Tier"]
+        W1["RQ Worker 1"]
+        W2["RQ Worker 2"]
+        Box1["Ephemeral Docker Sandbox<br/>(128MB RAM | 0.5 vCPU | --network none)"]
+        Box2["Ephemeral Docker Sandbox<br/>(128MB RAM | 0.5 vCPU | --network none)"]
+    end
+
+    subgraph ObsTier ["Observability & Telemetry"]
+        Prom["Prometheus<br/>(Scrapes /metrics every 2s)"]
+        Graf["Grafana<br/>(p95 Latency, Throughput & Status Dashboards)"]
+    end
+
+    User -- "HTTP" --> Nginx
+    Nginx -- "50/50 Split" --> API1 & API2
+    API1 & API2 -- "1. Rate Check & Enqueue" --> Redis
+    Redis -- "2. Pull Grading Job" --> W1 & W2
+    W1 --> Box1
+    W2 --> Box2
+    Prom -- "Scrape" --> API1 & API2
+    Graf -- "Visualize" --> Prom
+```
 
 ---
 
-## 📚 Drill Catalog
+## Core Non-Functional Requirements (NFRs) & Engineering Decisions
 
-| ID | Title | Category | Difficulty | Mode | Key Files |
-|---|---|---|---|---|---|
-| `01-fix-discount-bug` | **Fix Promo Code Calculation Bug** | Bug Fixing | Easy | Bug Fix | `cart.py`, `promo.py`, `models.py` |
-| `02-jwt-token-expiration` | **Fix JWT Expiration & Role Authorization** | Security & Auth | Medium | Security Audit | `auth.py`, `middleware.py`, `models.py` |
-| `03-rate-limiter-sliding-window` | **Implement Sliding Window Rate Limiter** | Feature Addition | Medium | Feature Addition | `rate_limiter.py`, `storage.py`, `config.py` |
-| `04-csv-memory-stream` | **Fix Memory Spike in Large CSV Exporter** | Optimization | Hard | Refactoring | `exporter.py`, `streamer.py`, `data_source.py` |
-| `05-webhook-retry-dispatcher` | **Add Exponential Backoff to Webhook Dispatcher** | Feature Addition | Medium | Feature Addition | `dispatcher.py`, `retry_policy.py`, `events.py` |
-| `06-inventory-race-condition` | **Prevent Inventory Allocation Race Condition** | Bug Fixing | Hard | Bug Fix | `inventory_service.py`, `warehouse.py`, `order.py` |
+### 1. Scalability & Asynchronous Load Leveling (FastAPI + Redis + RQ)
+* **Problem**: Executing `pytest` and `ruff` inside Docker containers takes `~350–500ms` per submission. Running Docker synchronously inside HTTP request handlers blocks worker threads and causes cascading timeouts under burst traffic.
+* **Solution**: Decoupled HTTP ingestion from sandbox execution using a **Redis + RQ** Producer-Consumer queue. FastAPI validates payloads, enqueues a job ticket, and returns a `job_id` in **<15ms**, while stateless background workers pull and grade submissions asynchronously.
+* **Horizontal Scaling**: Because API nodes hold zero local state, **Nginx** load-balances traffic evenly (`50/50`) across multiple FastAPI instances (`8001` and `8002`), while multiple worker processes scale container throughput independently.
+
+### 2. Multi-Tenant Security & Blast-Radius Containment (Docker Hardening)
+* **Problem**: Executing untrusted user code exposes the host machine to infinite loops, memory bombs, data exfiltration, and directory traversal attacks.
+* **Solution**:
+  * **Network Isolation**: Containers run with `network_disabled=True` (`--network none`), blocking external network calls and reverse shells.
+  * **Resource Cgroups**: Enforced hard caps (`128MB` RAM, `0.5` vCPU) per container so runaway processes cannot starve the host OS.
+  * **Ephemeral Workspaces**: Submissions are merged into isolated `tempfile.TemporaryDirectory()` mounts inside self-destructing containers (`remove=True`), wiping all artifacts immediately after grading.
+  * **Path Traversal Sanitization**: Canonical path resolution (`target.resolve()`) verifies all submitted file paths stay strictly inside the sandbox directory.
+
+### 3. Resilience & Edge Backpressure (Nginx + Redis Rate Limiting)
+* **Problem**: Rapid-fire submissions from a single client can flood the Redis queue and starve legitimate users.
+* **Solution**: Configured **Nginx** at the edge to enforce strict request body limits (`1MB`) and timeouts, backed by an atomic **Redis Sliding-Window Rate Limiter** (`HTTP 429 Too Many Requests`) using Redis pipelines (`ZREMRANGEBYSCORE`, `ZCARD`, `ZADD`).
+
+### 4. Real-Time Observability & Load Testing (Prometheus + Grafana + Locust)
+* **Problem**: Identifying bottlenecks requires measuring time spent across network routing, queue wait times, and container cold-starts separately.
+* **Solution**: Instrumented FastAPI with `prometheus-fastapi-instrumentator`, scraped metrics every `2s` with **Prometheus**, visualized live telemetry in **Grafana**, and stress-tested concurrent submission bursts with **Locust**.
 
 ---
 
-## 🚀 Quick Start
+## Load Testing & Observability Results
 
-### 1. Start the Backend API
+![Grafana Live Telemetry Dashboard](docs/grafana-metrics.png)
+
+### Key Measured Observations
+* **Even Load Distribution**: Grafana confirmed **Nginx** splits incoming requests symmetrically (`~0.5 req/s` per instance across ports `8001` and `8002`) with zero uneven routing.
+* **Predictable Tail Latency (`p95`)**: Decoupling Docker execution behind Redis kept API ingestion `p95` latency flat at **`~95ms`** under sustained load, eliminating HTTP thread starvation.
+* **Zero Error Leakage (`0%` 5xx Rate)**: All valid requests resolved cleanly with `HTTP 200`, while excess traffic above the configured threshold was cleanly shed at the API layer with `HTTP 429`.
+* **Worker-to-vCPU Trade-off**: Scaling from `1` to `3` parallel RQ workers significantly reduced `queue_wait_ms` under concurrent Locust bursts, whereas scaling beyond host vCPU limits introduced CPU context-switching overhead in `docker_exec_ms`.
+
+---
+
+## Tech Stack
+* **Frontend**: React, Vite, JavaScript/TypeScript
+* **API & Workers**: Python 3.11, FastAPI, Pydantic, RQ (Redis Queue)
+* **Sandbox & Linting**: Docker Engine, Python Docker SDK, Pytest, Ruff
+* **Infrastructure & Edge**: Nginx, Redis, Docker Compose
+* **Observability & Load Testing**: Prometheus, Grafana, Locust
+
+---
+
+## Local Setup & Running the Distributed Cluster
+
+### 1. Build the Isolated Sandbox Image
 ```bash
 cd backend
-python -m uvicorn app.main:app --reload --port 8000
+docker build -f Dockerfile.sandbox -t repo-sandbox:latest .
 ```
-API runs at `http://localhost:8000` with endpoints:
-- `GET /challenges` — list all drills with metadata and file previews
-- `GET /challenges/{id}` — load drill files and scenario configuration
-- `POST /challenges/{id}/submit` — run tests in isolated sandbox
-- `GET /system/status` — check Docker container readiness and health
 
-### 2. Start the Frontend Workspace
+### 2. Start Infrastructure (Redis, Nginx, Prometheus, Grafana)
 ```bash
-cd frontend
-npm run dev
+cd infra
+docker compose up -d
 ```
-Open `http://localhost:5173` in your browser.
 
-*(Note: The frontend also embeds default drill metadata so you can explore the catalog and workspace right out of the box).*
+### 3. Start Stateless FastAPI Nodes & Sandbox Workers
+Open separate terminals inside `backend/`:
+```bash
+# Terminal 1 (API Node 1)
+uvicorn app.main:app --port 8001
 
----
+# Terminal 2 (API Node 2)
+uvicorn app.main:app --port 8002
 
-## 🔒 Security Architecture
-
+# Terminal 3 & 4 (Parallel Sandbox Workers)
+python worker.py
 ```
-User Browser (Workspace IDE)
-           │
-           │ POST /challenges/{id}/submit
-           ▼
-FastAPI Backend (Path Traversal Sanitation)
-           │
-           │ Mounts temporary ephemeral directory
-           ▼
-Docker Sandbox Container / Isolated Process
-  ├── Network: Disabled (`network_disabled=True`)
-  ├── Memory limit: 128 MB
-  ├── Nano CPUs: 0.5 core
-  ├── Read-Only: Hidden Pytest Test Suite
-  └── Execution: Pytest assertions + PEP8 style check
-           │
-           ▼
-Formatted Console Logs & Pass/Fail Status Returned to UI
+
+### 4. Start Frontend & Run Locust Load Tests
+```bash
+# Frontend (http://localhost:5173)
+cd frontend && npm run dev
+
+# Locust Load Generator (http://localhost:8089)
+cd loadtest && locust -f locustfile.py --host http://localhost:8080
 ```

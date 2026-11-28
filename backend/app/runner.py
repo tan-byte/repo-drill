@@ -7,6 +7,7 @@ import tempfile
 import time
 from pathlib import Path
 import yaml
+import docker
 
 CHALLENGES_DIR = Path(__file__).resolve().parent.parent / "challenges"
 
@@ -41,18 +42,10 @@ def get_challenge_data(challenge_id: str) -> dict:
     starter_dir = base_dir / "starter"
 
     files = {}
-    if starter_dir.is_dir():
-        for file_path in sorted(starter_dir.rglob("*")):
-            if file_path.is_file():
-                if any(part in IGNORED_DIRS for part in file_path.parts):
-                    continue
-                if file_path.suffix.lower() in IGNORED_EXTS:
-                    continue
-                try:
-                    rel_path = file_path.relative_to(starter_dir).as_posix()
-                    files[rel_path] = file_path.read_text(encoding="utf-8")
-                except UnicodeDecodeError:
-                    continue
+    for file_path in starter_dir.rglob("*"):
+        if file_path.is_file():
+            rel_path = file_path.relative_to(starter_dir).as_posix()
+            files[rel_path] = file_path.read_text(encoding="utf-8")
 
     return {"meta": config, "files": files}
 
@@ -265,11 +258,11 @@ def _run_in_isolated_process(temp_path: Path, config: dict) -> dict:
         }
 
 
-def evaluate_submission(challenge_id: str, modified_files: dict[str, str]) -> dict:
-    base_dir = CHALLENGES_DIR / challenge_id
-    if not (base_dir / "challenge.yaml").is_file():
-        return {"passed": False, "logs": f"Challenge configuration not found: {challenge_id}"}
+def evaluate_submission(challenge_id: str, modified_files: dict[str, str], enqueued_at: float) -> dict:
+    started_at = time.perf_counter()
+    queue_wait_ms = round((started_at - enqueued_at) * 1000, 2)
 
+    base_dir = CHALLENGES_DIR / challenge_id
     config = yaml.safe_load((base_dir / "challenge.yaml").read_text(encoding="utf-8"))
 
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -277,24 +270,44 @@ def evaluate_submission(challenge_id: str, modified_files: dict[str, str]) -> di
         starter_dest = temp_path / "starter"
         tests_dest = temp_path / "hidden_tests"
 
-        ignore_rule = shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache", ".git")
-        shutil.copytree(base_dir / "starter", starter_dest, ignore=ignore_rule)
-        shutil.copytree(base_dir / "hidden_tests", tests_dest, ignore=ignore_rule)
+        shutil.copytree(base_dir / "starter", starter_dest)
+        shutil.copytree(base_dir / "hidden_tests", tests_dest)
 
-        # Apply user edits safely (prevents directory traversal)
+        # Path traversal protection
         for rel_path, content in modified_files.items():
             target = (starter_dest / rel_path).resolve()
             if starter_dest.resolve() in target.parents:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text(content, encoding="utf-8")
 
-        # Try Docker container sandbox first
-        docker_client = get_docker_client()
-        if docker_client:
-            try:
-                return _run_in_docker(docker_client, temp_path, config)
-            except Exception:
-                pass  # Fall through to isolated process sandbox
+        cmd = f"sh -c '{config['test_command']} && {config['lint_command']}'"
 
-        # Isolated process sandbox fallback
-        return _run_in_isolated_process(temp_path, config)
+        try:
+            output = client.containers.run(
+                image="repo-sandbox:latest",
+                command=cmd,
+                volumes={str(temp_path): {"bind": "/workspace", "mode": "rw"}},
+                network_disabled=True,
+                mem_limit="128m",
+                nano_cpus=500_000_000,
+                remove=True,
+                stdout=True,
+                stderr=True,
+            )
+            exec_ms = round((time.perf_counter() - started_at) * 1000, 2)
+            print(f"[METRICS] PASSED | queue_wait={queue_wait_ms}ms | docker_exec={exec_ms}ms")
+            return {
+                "passed": True,
+                "logs": output.decode("utf-8"),
+                "metrics": {"queue_wait_ms": queue_wait_ms, "docker_exec_ms": exec_ms},
+            }
+
+        except docker.errors.ContainerError as err:
+            exec_ms = round((time.perf_counter() - started_at) * 1000, 2)
+            raw_logs = err.stderr.decode("utf-8") if err.stderr else str(err)
+            print(f"[METRICS] FAILED | queue_wait={queue_wait_ms}ms | docker_exec={exec_ms}ms")
+            return {
+                "passed": False,
+                "logs": raw_logs,
+                "metrics": {"queue_wait_ms": queue_wait_ms, "docker_exec_ms": exec_ms},
+            }

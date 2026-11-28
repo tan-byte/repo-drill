@@ -1,0 +1,7 @@
+﻿global:
+  scrape_interval: 2s
+
+scrape_configs:
+  - job_name: "repodrill-api"
+    static_configs:
+      - targets: ["host.docker.internal:8001", "host.docker.internal:8002"]
